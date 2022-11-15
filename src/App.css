@@ -15,3 +15,15 @@ body {
   background: rgb(234, 202, 232);
   position: fixed;
 }
+
+.controls {
+  text-align: center;
+  padding: 0.5em 0;
+  background: #333e5a;
+  color: #fff;
+}
+canvas {
+  padding: 20px;
+  margin: 0 auto;
+  display: block;
+}
