@@ -82,7 +82,7 @@ class AudioAnalyzer extends Component {
     const sliceWidth = (width * 1.0) / audioData.length;
 
     context.lineWidth = 2;
-    context.strokeStyle = '#000000';
+    context.strokeStyle = '#FFFFFF';
     context.clearRect(0, 0, width, height);
 
     context.beginPath();
@@ -104,7 +104,7 @@ class AudioAnalyzer extends Component {
   // frame. By the time this executes, canvas should have all the graphics
   // drawn on it.
   render() {
-    return <canvas width="300" height="300" ref={this.canvas} />;
+    return <canvas width="800" height="300" ref={this.canvas} />;
   }
 }
 

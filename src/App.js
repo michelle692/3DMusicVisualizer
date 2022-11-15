@@ -56,23 +56,36 @@ class App extends React.Component {
     }
   }
 
+
   render() {
-    return (
-      <div>
+    if (this.state.audio == null) {
+      return (
         <div className="controls">
           <button onClick={this.toggleMicrophone}>
-            {this.state.audio ? 'Stop microphone' : 'Get microphone input'}
+            {'Get microphone input'}
           </button>
         </div>
-        {this.state.audio ? <AudioAnalyzer audioController={this.state.audio} /> : ''}
+      )
+    }
+    return (
+      <div>
+        <AudioAnalyzer audioController={this.state.audio} />
 
 
         <div >
           <Canvas style={{height: `500px`}} dpr={[1, 2]} camera={{ position: [0, -0.75, 0.75], fov: 80, near: 0.001 }}>
             <Suspense fallback={null}>
-              <mesh>
+              <mesh scale={100}>
                 <sphereGeometry args={[1, 64, 64]} />
-                <meshPhysicalMaterial color={this.state.colorA} depthWrite={false} roughness={0.5} />
+                <LayerMaterial attach="material" side={THREE.BackSide}>
+                  <Color color={this.state.base} alpha={1} mode="normal" />
+                  <Depth colorA={this.state.colorB} colorB={this.state.colorA} alpha={0.5} mode="normal" near={0} far={300} origin={[100, 100, 100]} />
+                  {/* <Noise mode="subtract" alpha={0.3} mapping={"local"} type={"curl"}/> */}
+                </LayerMaterial>
+              </mesh>
+              <mesh>
+                <sphereGeometry args={[0.2, 64, 64]} />
+                <meshPhysicalMaterial depthWrite={false} transmission={1} thickness={10} roughness={0.0} />
               </mesh>
               <OrbitControls />
               <pointLight position={[10, 10, 5]} />
