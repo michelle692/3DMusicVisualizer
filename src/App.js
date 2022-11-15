@@ -62,7 +62,7 @@ class App extends React.Component {
       return (
         <div className="controls">
           <button onClick={this.toggleMicrophone}>
-            {'Get microphone input'}
+            {'START'}
           </button>
         </div>
       )
@@ -80,7 +80,7 @@ class App extends React.Component {
                 <LayerMaterial attach="material" side={THREE.BackSide}>
                   <Color color={this.state.base} alpha={1} mode="normal" />
                   <Depth colorA={this.state.colorB} colorB={this.state.colorA} alpha={0.5} mode="normal" near={0} far={300} origin={[100, 100, 100]} />
-                  {/* <Noise mode="subtract" alpha={0.3} mapping={"local"} type={"curl"}/> */}
+                  <Noise mode="subtract" alpha={0.3} mapping={"local"} type={"curl"}/>
                 </LayerMaterial>
               </mesh>
               <mesh>

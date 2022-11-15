@@ -19,12 +19,17 @@ body {
 .controls {
   text-align: center;
   padding: 0.5em 0;
-  /* padding-top: 350px; */
-  background: #1e0533;
+  padding-top: 350px;
+  background: linear-gradient(30deg, #CBC3E3, #100326);
   color: #fff;
-  /* width: 100%;
-  height: 100%; */
+  width: 100%;
+  height: 100%;
 }
+
+.button {
+  font-size: 16px;
+}
+
 canvas {
   padding: 20px;
   margin: 0 auto;
