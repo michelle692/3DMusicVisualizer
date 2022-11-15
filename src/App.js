@@ -61,8 +61,8 @@ class App extends React.Component {
     if (this.state.audio == null) {
       return (
         <div className="controls">
-          <button onClick={this.toggleMicrophone}>
-            {'START'}
+            <button className="btn" onClick={this.toggleMicrophone}>
+            {'start'}
           </button>
         </div>
       )
