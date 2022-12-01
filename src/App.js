@@ -11,6 +11,7 @@ import { shaderMaterial } from "@react-three/drei";
 import glsl from "babel-plugin-glsl/macro";
 
 var clock = new THREE.Clock();
+var counter = 0;
 
 const WaveShaderMaterial = shaderMaterial(
   // Uniform
@@ -170,6 +171,7 @@ class App extends React.Component {
     this.state = {
       audioData: new Uint8Array(0),
       normalizedData: new Uint8Array(0),
+      sphereData: new Uint8Array(0),
       base: { value: '#ff4eb8' },
       colorA: { value: '#00ffff' },
       colorB: { value: '#ff8f00' }
@@ -217,10 +219,26 @@ class App extends React.Component {
 
   loop() {
     if (this.audioAnalyzer.isConnected()) {
-      this.audioAnalyzer.analyze();
+      //counter++;
+      
 
+
+      //if (counter >= 5) {
+        //this.audioAnalyzer.analyze();
+        //counter = 0;
+      //}
+
+      this.audioAnalyzer.analyze();
+      this.audioAnalyzer.analyzeSphere();
+
+      //getting new data input for the sphere
+      const sphereData = this.audioAnalyzer.getSphereData();
+      const normalizedSphereData = sphereData;
+
+      //input data for the mesh
       const audioData = this.audioAnalyzer.getAudioData();
       const normalizedData = audioData;
+
 
       // Do what you want here with normalized data.
       // let count = 0;
@@ -240,7 +258,7 @@ class App extends React.Component {
 
       // }
 
-      this.setState({ audioData: audioData, normalizedData: normalizedData });
+      this.setState({ audioData: audioData, normalizedData: normalizedData, sphereData:normalizedSphereData });
     }
 
     this.rafId = requestAnimationFrame(this.loop);
@@ -250,6 +268,7 @@ class App extends React.Component {
   componentDidUpdate() {
 
     const audioData = this.state.audioData;
+    //const sphereData
 
     const canvas = this.canvas.current;
     const height = canvas.height;
@@ -296,6 +315,15 @@ class App extends React.Component {
     const s6 = this.state.normalizedData[400] / 255.0 * 1.5; //7
     const s8 = this.state.normalizedData[500] / 255.0 * 2.5; //8
 
+    const o1 = this.state.sphereData[10]/255.0 *1.5;
+    const o3 = this.state.sphereData[15] / 255.0 * 1.5; //2
+    const o5 = this.state.sphereData[20] / 255.0 * 2.5; //3 
+    const o2 = this.state.sphereData[100] / 255.0 * 2.5; //4
+    const o7 = this.state.sphereData[150] / 255.0 * 2.5; //5
+    const o4 = this.state.sphereData[380] / 255.0 * 2.5; //6
+    const o6 = this.state.sphereData[400] / 255.0 * 1.5; //7
+    const o8 = this.state.sphereData[500] / 255.0 * 2.5; //8
+
     const r = this.state.normalizedData[100] / 300.0;
 
     return (
@@ -318,7 +346,7 @@ class App extends React.Component {
               </mesh> */}
 
               <BG />
-              
+                
               <Sphere scale={s1}/>
 
               <Frames position={[-1.5, 0.0, -3]}/>
@@ -327,7 +355,7 @@ class App extends React.Component {
 
               <SphereFrame position={[0.8, 0.0, -3]}/>
 
-              <mesh scale={s1} position={[0.5, 0, 0]} >
+              <mesh scale={o1} position={[0.5, 0, 0]} >
                 <sphereGeometry args={[0.2, 64, 64]} />
                 <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
               </mesh>
