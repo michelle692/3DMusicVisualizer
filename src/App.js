@@ -15,7 +15,7 @@ var clock = new THREE.Clock();
 
 const WaveShaderMaterial = shaderMaterial(
   // Uniform
-  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0) }, 
+  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0), uTexture: new THREE.Texture(), }, 
   // Vertex Shader
   glsl`
     precision mediump float;
@@ -24,7 +24,7 @@ const WaveShaderMaterial = shaderMaterial(
 
     uniform float uTime;
 
-    #pragma glslify: snoise3 = require(glsl-noise/simplex/3d);
+    #pragma glslify: snoise3 = require(glsl-noise/simplex/3d); 
 
     void main() {
       vUv = uv;
@@ -44,11 +44,13 @@ const WaveShaderMaterial = shaderMaterial(
 
     uniform vec3 uColor;
     uniform float uTime;
+    uniform sampler2D uTexture;
 
     varying vec2 vUv;
 
     void main() {
-      gl_FragColor = vec4(sin(vUv.x + uTime), 0.8, 0.7, 0.5);
+      vec3 texture = texture2D(uTexture, vUv).rgb;
+      gl_FragColor = vec4(texture, 1.0);
     }
   `
 );
@@ -154,12 +156,13 @@ const Frames = (props) => {
 
 
 const SphereFrame = (props) => {
+  const texture = useTexture(require('./Dali.jpeg'));
   const ref = useRef();
   return (
     <mesh position={props.position}>
       <planeBufferGeometry args={[0.5, 0.8, 16, 16]} />
-      <waveShaderMaterial uTime={clock.getElapsedTime()} uColor={"green"} ref={ref} />
-    </mesh>
+      <waveShaderMaterial uTime={clock.getElapsedTime()} uColor={"green"} uTexture={texture} ref={ref} />
+    </mesh> 
   )
 }
 
