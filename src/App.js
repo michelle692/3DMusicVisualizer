@@ -2,7 +2,7 @@ import React from "react";
 import * as THREE from 'three'
 import { Canvas, extend, useFrame } from '@react-three/fiber'
 import { useRef, Suspense } from 'react';
-import { OrbitControls, Environment } from '@react-three/drei'
+import { OrbitControls, Environment, useTexture } from '@react-three/drei'
 import { LayerMaterial, Color, Depth, Fresnel, Noise } from 'lamina'
 import { useControls } from 'leva'
 import './App.css';
@@ -157,6 +157,17 @@ const SphereFrame = (props) => {
     <mesh position={props.position}>
       <planeBufferGeometry args={[0.5, 0.8, 16, 16]} />
       <waveShaderMaterial uTime={clock.getElapsedTime()} uColor={"green"} ref={ref} />
+    </mesh>
+  )
+}
+
+function Image() {
+  const texture = useTexture(require('./Dali.jpeg'));
+  const ref = useRef();
+  return (
+    <mesh >
+      <boxGeometry args={[0.5, 0.5, 0.5]} />
+      <meshStandardMaterial uTime={clock.getElapsedTime()} color={0xaaa9ad} map={texture} ref={ref}/>
     </mesh>
   )
 }
@@ -331,6 +342,8 @@ class App extends React.Component {
                 <sphereGeometry args={[0.2, 64, 64]} />
                 <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
               </mesh>
+
+              <Image scale={s1} position={[1, 1, 1]}/>
 
               {/* <mesh scale={s7} position={[1.5, 0.4, -5]} >
                 <sphereGeometry args={[0.2, 64, 64]} />
