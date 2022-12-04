@@ -9,6 +9,7 @@ import './App.css';
 import AudioAnalyzer from './AudioAnalyzer';
 import { shaderMaterial } from "@react-three/drei";
 import glsl from "babel-plugin-glsl/macro";
+import { useGLTF } from "@react-three/drei";
 
 var clock = new THREE.Clock();
 
@@ -145,11 +146,12 @@ const Frames = (props) => {
   const ref = useRef();
   return (
     <mesh position={props.position}>
-      <planeBufferGeometry args={[0.5, 1.2, 16, 16]} />
+      <planeBufferGeometry args={[0.5, 1.2, 8, 8]} />
       <ditherShaderMaterial uTime={clock.getElapsedTime()} uColor={"green"} ref={ref} />
     </mesh>
   )
 }
+
 
 const SphereFrame = (props) => {
   const ref = useRef();
@@ -161,6 +163,22 @@ const SphereFrame = (props) => {
   )
 }
 
+
+// const Star = (props) => {
+//   const { nodes, materials } = useGLTF("/mesh.gltf");
+//   return (
+//     <group {...props} dispose={null}>
+//       <mesh
+//         castShadow
+//         receiveShadow
+//         geometry={nodes.pMesh1.geometry}
+//         material={nodes.pMesh1.material}
+//       />
+//     </group>
+//   )
+// }
+
+// useGLTF.preload("/mesh.gltf");
 
 
 //UI editor
@@ -326,6 +344,8 @@ class App extends React.Component {
               <Frames position={[-0.4, 0.0, -3]}/>
 
               <SphereFrame position={[0.8, 0.0, -3]}/>
+
+              {/* <Star scale={0.5} position={[0, 0, 0]} /> */}
 
               <mesh scale={s1} position={[0.5, 0, 0]} >
                 <sphereGeometry args={[0.2, 64, 64]} />
