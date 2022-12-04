@@ -169,7 +169,8 @@ function Image() {
   return (
     <mesh >
       <boxGeometry args={[0.5, 0.5, 0.5]} />
-      <meshStandardMaterial uTime={clock.getElapsedTime()} color={0xaaa9ad} map={texture} ref={ref}/>
+      {/* <sphereBufferGeometry args={[0.4, 32.0, 32.0]} /> */}
+      <meshStandardMaterial map={texture} ref={ref}/>
     </mesh>
   )
 }
@@ -363,7 +364,7 @@ class App extends React.Component {
                 <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
               </mesh>
 
-              <Image scale={s1} position={[1, 1, 1]}/>
+              <Image scale={1} position={[1, 1, 1]}/>
 
               {/* <mesh scale={s7} position={[1.5, 0.4, -5]} >
                 <sphereGeometry args={[0.2, 64, 64]} />
