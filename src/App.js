@@ -2,7 +2,7 @@ import React from "react";
 import * as THREE from 'three'
 import { Canvas, extend, useFrame } from '@react-three/fiber'
 import { useRef, Suspense } from 'react';
-import { Environment, useTexture } from '@react-three/drei'
+import { OrbitControls, Environment, useTexture } from '@react-three/drei'
 import AudioAnalyzer from './AudioAnalyzer';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
@@ -61,7 +61,7 @@ const SphereFrame = (props) => {
     <mesh position={props.position}>
       <planeBufferGeometry args={[2.5, 1, 8, 8]} />
       <waveShaderMaterial uTime={clock.getElapsedTime()} uColor={"green"} uTexture={texture} ref={ref} />
-    </mesh> 
+    </mesh>
   )
 }
 
@@ -72,7 +72,7 @@ function Image() {
     <mesh >
       <boxGeometry args={[0.5, 0.5, 0.5]} />
       {/* <sphereBufferGeometry args={[0.4, 32.0, 32.0]} /> */}
-      <meshStandardMaterial map={texture} ref={ref}/>
+      <meshStandardMaterial map={texture} ref={ref} />
     </mesh>
   )
 }
@@ -81,15 +81,15 @@ function Image() {
 const font = new FontLoader().parse(inconsolata);
 
 const Text = (props) => {
-  useFrame(({clock}) => (ref.current.uTime = clock.getElapsedTime()));
+  useFrame(({ clock }) => (ref.current.uTime = clock.getElapsedTime()));
   const ref = useRef();
   return (
     <mesh
-    position={[-2,0,0]}
-    onClick={props.click}
+      position={[-2, 0, 0]}
+      onClick={props.click}
     >
-      <textGeometry args={['Start', {font, size: 1, height: 1}]} />
-      <textWaveShaderMaterial uTime={clock.getElapsedTime()} color={"green"} ref={ref} wireframe/>
+      <textGeometry args={['Start', { font, size: 1, height: 1 }]} />
+      <textWaveShaderMaterial uTime={clock.getElapsedTime()} color={"green"} ref={ref} wireframe />
     </mesh>
   )
 }
@@ -162,7 +162,7 @@ class App extends React.Component {
         const start = bucket_size * i;
 
         // in case the last bucket does not divide evenly
-        const end = bucket_size * (i+1) > audioData.length ? audioData.length : bucket_size * (i+1);
+        const end = bucket_size * (i + 1) > audioData.length ? audioData.length : bucket_size * (i + 1);
 
         var sum = 0;
         for (var j = start; j < end; j++) {
@@ -209,14 +209,14 @@ class App extends React.Component {
     context.stroke();
   }
 
-  
+
 
   render() {
     if (!this.audioAnalyzer.isConnected()) {
       return (
         <div>
           <Canvas style={{ height: `100vh`, width: '100vw' }} >
-            <Text click={this.toggleMicrophone}/>
+            <Text click={this.toggleMicrophone} />
             <pointLight position={[500, 500, 0]} />
             <ambientLight intensity={0.4} />
           </Canvas>
@@ -233,7 +233,7 @@ class App extends React.Component {
       <div style={{ width: "100vw", height: "100vh" }}>
 
         <div style={{ width: "100vw", height: "100vh" }}>
-          <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 10, near: 0.1 }} onpmrthographic={ true }>
+          <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 10, near: 0.1 }} onpmrthographic={true}>
             <Suspense fallback={null}>
               {/* <mesh scale={5}>
                 <sphereGeometry args={[1, 64, 64]} />
@@ -248,16 +248,16 @@ class App extends React.Component {
                 <waveShaderMaterial uColor={"hotpink"}/>
               </mesh> */}
 
-              <BG freq={f} bg={0}/>
+              <BG freq={f} bg={0} />
               {/* <Frames position={[-1.5, 0.0, -3]} freq={cum} bg={0} /> */}
-              
+
               {/* <Sphere scale={s1}/>
 
               <Frames position={[-1.5, 0.0, -3]}/>
               <Frames position={[-0.95, 0.0, -3]}/>
               <Frames position={[-0.4, 0.0, -3]}/> */}
 
-              <SphereFrame position={[0, 0, 0]}/>
+              <SphereFrame position={[0, 0, 0]} />
 
               {/* <Star scale={0.5} position={[0, 0, 0]} /> */}
 
@@ -268,36 +268,17 @@ class App extends React.Component {
 
               {/* <Image scale={1} position={[1, 1, 1]}/> */}
 
-              {/* <mesh scale={s7} position={[1.5, 0.4, -5]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh> */}
-
-
-              {/* 1.6 */}
-              {/* <mesh scale={s1} position={[Math.sin(clock.getElapsedTime()), Math.cos(clock.getElapsedTime()), 0]} rotation={[clock.getElapsedTime(), 0, 0]}>
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh>
-
-              <mesh scale={s2} position={[-0.5, 0.5, 0]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh>
-
-
-              <mesh scale={40} position={[0, 0, 0]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshStandardMaterial attach="material" color="hotpink" transparent />
-              </mesh>
-
-
-              <mesh scale={10}>
-                <boxGeometry args={[1, 1, 1]} />
-                <meshBasicMaterial color={0xffffff} />
-              </mesh>
 
               <mesh
+                scale={s1}
+                position={[Math.sin(clock.getElapsedTime()) * 0.3, Math.cos(clock.getElapsedTime()) * 0.3, 0]} 
+                >
+                <sphereGeometry args={[0.2, 64, 64]} />
+                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
+              </mesh>
+
+
+              {/* <mesh
                 scale={2}
                 position={[1.6, -0.5, -10.0]}
                 rotation={[Math.PI / 2, 0, 0]}
@@ -306,7 +287,7 @@ class App extends React.Component {
                 <meshStandardMaterial attach="material" color="hotpink" transparent />
               </mesh> */}
 
-              {/* <OrbitControls /> */}
+              <OrbitControls />
               {/* <pointLight position={[10, 10, 5]} /> */}
               <pointLight position={[500, 500, 0]} />
               {/* <pointLight position={[-10, -10, -5]} color={this.state.colorA} /> */}
