@@ -4,7 +4,7 @@ import glsl from "babel-plugin-glsl/macro";
 
 export const WaveShaderMaterial = shaderMaterial(
     // Uniform
-    { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0), uTexture: new THREE.Texture(), },
+    { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0), uFreq: 0.0, uTexture: new THREE.Texture(), },
     // Vertex Shader
     glsl`
       precision mediump float;
@@ -34,18 +34,15 @@ export const WaveShaderMaterial = shaderMaterial(
       uniform vec3 uColor;
       uniform float uTime;
       uniform sampler2D uTexture;
+      uniform float uFreq;
   
       varying vec2 vUv;
   
       #pragma glslify: dither = require(glsl-dither);
   
       void main() {
-        vec3 texture = texture2D(uTexture, vUv).rgb;
-        vec4 textCol = vec4(texture, 1.0);
-  
-        vec4 color = vec4(sin(uColor.x + uTime), 0.5, 1.0, 0.5);
-  
-        gl_FragColor = dither(gl_FragCoord.xy, textCol);
+        vec3 texture = vec3(uFreq, uFreq, uFreq) - texture2D(uTexture, vUv).rgb;
+        gl_FragColor = vec4(texture, 1.0);
       }
     `
 );
