@@ -12,6 +12,7 @@ import glsl from "babel-plugin-glsl/macro";
 import { useGLTF } from "@react-three/drei";
 
 var clock = new THREE.Clock();
+const NUM_OF_BINS = 20;
 
 const WaveShaderMaterial = shaderMaterial(
   // Uniform
@@ -48,9 +49,15 @@ const WaveShaderMaterial = shaderMaterial(
 
     varying vec2 vUv;
 
+    #pragma glslify: dither = require(glsl-dither);
+
     void main() {
       vec3 texture = texture2D(uTexture, vUv).rgb;
-      gl_FragColor = vec4(texture, 1.0);
+      vec4 textCol = vec4(texture, 1.0);
+
+      vec4 color = vec4(sin(uColor.x + uTime), 0.5, 1.0, 0.5);
+
+      gl_FragColor = dither(gl_FragCoord.xy, textCol);
     }
   `
 );
@@ -87,7 +94,7 @@ const GradientShaderMaterial = shaderMaterial(
 
 const DitherShaderMaterial = shaderMaterial(
   // Uniform
-  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0) }, 
+  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0), uFreq: 0.0, uBg: 1 },
   // Vertex Shader
   glsl`
     precision mediump float;
@@ -99,7 +106,7 @@ const DitherShaderMaterial = shaderMaterial(
 
       gl_Position = projectionMatrix * modelViewMatrix * vec4 (position, 1.0);
     }
-  `, 
+  `,
 
   // Fragment shader
   glsl`
@@ -107,6 +114,8 @@ const DitherShaderMaterial = shaderMaterial(
 
     uniform vec3 uColor;
     uniform float uTime;
+    uniform float uFreq;
+    uniform int uBg;
 
     #pragma glslify: dither = require(glsl-dither);
 
@@ -114,6 +123,9 @@ const DitherShaderMaterial = shaderMaterial(
 
     void main() {
       vec4 color = vec4(sin(uColor.x + uTime), 0.5, 1.0, 0.5);
+      if (uBg == 0) {
+        color = vec4(uFreq, uFreq, uFreq, 1);
+      }
       gl_FragColor = dither(gl_FragCoord.xy, color);
     }
   `
@@ -123,12 +135,12 @@ extend({ WaveShaderMaterial });
 extend({ GradientShaderMaterial });
 extend({ DitherShaderMaterial });
 
-const BG = () => {
+const BG = (props) => {
   const ref = useRef();
   return (
     <mesh position={[0.0, 0.0, -5]} >
       <planeBufferGeometry args={[8, 8, 8, 8]} />
-      <ditherShaderMaterial uTime={clock.getElapsedTime()} uColor={"hotpink"} ref={ref} />
+      <ditherShaderMaterial uTime={clock.getElapsedTime()} uColor={"hotpink"} uFreq={props.freq} uBg={props.bg} ref={ref} />
     </mesh>
   )
 }
@@ -160,7 +172,7 @@ const SphereFrame = (props) => {
   const ref = useRef();
   return (
     <mesh position={props.position}>
-      <planeBufferGeometry args={[0.5, 0.8, 16, 16]} />
+      <planeBufferGeometry args={[2.5, 1, 8, 8]} />
       <waveShaderMaterial uTime={clock.getElapsedTime()} uColor={"green"} uTexture={texture} ref={ref} />
     </mesh> 
   )
@@ -253,25 +265,28 @@ class App extends React.Component {
       this.audioAnalyzer.analyze();
 
       const audioData = this.audioAnalyzer.getAudioData();
-      const normalizedData = audioData;
 
-      // Do what you want here with normalized data.
-      // let count = 0;
-      // for (let i = 0; i < 9; i++) {
-      //   let avg = 0;
-      //   let sampleCnt =  (Math.pow(2, i) * 2) | 0;
+      const buffer = new ArrayBuffer(NUM_OF_BINS);
+      const normalizedData = new Uint8Array(buffer);
 
-      //   if (i == 8) {
-      //     sampleCnt += 2;
-      //   }
-      //   for (let j = 0; j < sampleCnt; j++) {
-      //     avg += audioData[count] * (count + 1);
-      //     count++;
-      //   }
-      //   avg /= count;
-      //   normalizedData [i] = avg * 10;
+      const size = audioData.length;
+      const bucket_size = Math.floor(size / NUM_OF_BINS);
 
-      // }
+      for (var i = 0; i < NUM_OF_BINS; i++) {
+        const start = bucket_size * i;
+
+        // in case the last bucket does not divide evenly
+        const end = bucket_size * (i+1) > audioData.length ? audioData.length : bucket_size * (i+1);
+
+        var sum = 0;
+        for (var j = start; j < end; j++) {
+          var freq = audioData[j];
+          sum += freq;
+        }
+        var avg = sum / (end - start);
+
+        normalizedData[i] = avg;
+      }
 
       this.setState({ audioData: audioData, normalizedData: normalizedData });
     }
@@ -282,7 +297,7 @@ class App extends React.Component {
   // this gets called when the frame needs to be refreshed... DRAW()
   componentDidUpdate() {
 
-    const audioData = this.state.audioData;
+    const audioData = this.state.normalizedData;
 
     const canvas = this.canvas.current;
     const height = canvas.height;
@@ -320,22 +335,16 @@ class App extends React.Component {
       )
     }
 
-    const s1 = this.state.normalizedData[10] / 255.0 * 1.5; //1
-    const s3 = this.state.normalizedData[15] / 255.0 * 1.5; //2
-    const s5 = this.state.normalizedData[20] / 255.0 * 2.5; //3 
-    const s2 = this.state.normalizedData[100] / 255.0 * 2.5; //4
-    const s7 = this.state.normalizedData[150] / 255.0 * 2.5; //5
-    const s4 = this.state.normalizedData[380] / 255.0 * 2.5; //6
-    const s6 = this.state.normalizedData[400] / 255.0 * 1.5; //7
-    const s8 = this.state.normalizedData[500] / 255.0 * 2.5; //8
+    const s1 = this.state.normalizedData[2] / 255.0 * 1.5; //1
 
-    const r = this.state.normalizedData[100] / 300.0;
+    const r = this.state.normalizedData[3] / 300.0;
+    const f = this.state.normalizedData[4] / 255.0; //2
 
     return (
-      <div>
+      <div style={{ width: "100vw", height: "100vh" }}>
 
-        <div >
-          <Canvas style={{ height: `500px` }} dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 10, near: 0.1 }} onpmrthographic={ true }>
+        <div style={{ width: "100vw", height: "100vh" }}>
+          <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 10, near: 0.1 }} onpmrthographic={ true }>
             <Suspense fallback={null}>
               {/* <mesh scale={5}>
                 <sphereGeometry args={[1, 64, 64]} />
@@ -350,24 +359,25 @@ class App extends React.Component {
                 <waveShaderMaterial uColor={"hotpink"}/>
               </mesh> */}
 
-              <BG />
+              <BG freq={f} bg={0}/>
+              {/* <Frames position={[-1.5, 0.0, -3]} freq={cum} bg={0} /> */}
               
-              <Sphere scale={s1}/>
+              {/* <Sphere scale={s1}/>
 
               <Frames position={[-1.5, 0.0, -3]}/>
               <Frames position={[-0.95, 0.0, -3]}/>
-              <Frames position={[-0.4, 0.0, -3]}/>
+              <Frames position={[-0.4, 0.0, -3]}/> */}
 
-              <SphereFrame position={[0.8, 0.0, -3]}/>
+              <SphereFrame position={[0, 0, 0]}/>
 
               {/* <Star scale={0.5} position={[0, 0, 0]} /> */}
 
-              <mesh scale={s1} position={[0.5, 0, 0]} >
+              <mesh scale={s1} position={[0, 0, 0]} >
                 <sphereGeometry args={[0.2, 64, 64]} />
                 <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
               </mesh>
 
-              <Image scale={1} position={[1, 1, 1]}/>
+              {/* <Image scale={1} position={[1, 1, 1]}/> */}
 
               {/* <mesh scale={s7} position={[1.5, 0.4, -5]} >
                 <sphereGeometry args={[0.2, 64, 64]} />
@@ -386,35 +396,6 @@ class App extends React.Component {
                 <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
               </mesh>
 
-              <mesh scale={s3} position={[0.5, 0.5, 0]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh>
-
-              <mesh scale={s4} position={[1.6, 0.5, 0]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh>
-
-              <mesh scale={s5} position={[-1.6, -0.5, 0]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh>
-              
-              <mesh scale={s6} position={[-0.5, -0.5, 0]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh>
-
-              <mesh scale={s7} position={[0.5, -0.5, 0]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh>
-              
-              <mesh scale={s8} position={[1.6, -0.5, 0]} >
-                <sphereGeometry args={[0.2, 64, 64]} />
-                <meshPhysicalMaterial color={0xaaa9ad} depthWrite={false} transmission={1} thickness={10} roughness={r} />
-              </mesh>
 
               <mesh scale={40} position={[0, 0, 0]} >
                 <sphereGeometry args={[0.2, 64, 64]} />
@@ -436,7 +417,7 @@ class App extends React.Component {
                 <meshStandardMaterial attach="material" color="hotpink" transparent />
               </mesh> */}
 
-              <OrbitControls />
+              {/* <OrbitControls /> */}
               {/* <pointLight position={[10, 10, 5]} /> */}
               <pointLight position={[500, 500, 0]} />
               {/* <pointLight position={[-10, -10, -5]} color={this.state.colorA} /> */}
