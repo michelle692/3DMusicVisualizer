@@ -11,6 +11,12 @@ import { shaderMaterial } from "@react-three/drei";
 import glsl from "babel-plugin-glsl/macro";
 import { useGLTF } from "@react-three/drei";
 
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
+import inconsolata from './Inconsolata_Regular.json'
+
+extend({ TextGeometry })
+
 var clock = new THREE.Clock();
 const NUM_OF_BINS = 20;
 
@@ -131,9 +137,50 @@ const DitherShaderMaterial = shaderMaterial(
   `
 );
 
+const TextWaveShaderMaterial = shaderMaterial(
+  // Uniform
+  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0) }, 
+  // Vertex Shader
+  glsl`
+    precision mediump float;
+
+    varying vec2 vUv;
+
+    uniform float uTime;
+
+    #pragma glslify: snoise3 = require(glsl-noise/simplex/3d);
+
+    void main() {
+      vUv = uv;
+      
+      vec3 pos = position;
+      float noiseFreq = 1.5;
+      float noiseAmp = 0.25;
+      vec3 noisePos = vec3(pos.x * noiseFreq + uTime, pos.y, pos.z);
+      pos.x += snoise3(noisePos) * noiseAmp;
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4 (pos, 1.0);
+    }
+  `, 
+  // Fragment shader
+  glsl`
+    precision mediump float;
+
+    uniform vec3 uColor;
+    uniform float uTime;
+
+    varying vec2 vUv;
+
+    void main() {
+      gl_FragColor = vec4(sin(vUv.x + uTime), 0.8, 0.7, 0.5);
+    }
+  `
+);
+
 extend({ WaveShaderMaterial });
 extend({ GradientShaderMaterial });
 extend({ DitherShaderMaterial });
+extend({ TextWaveShaderMaterial });
 
 const BG = (props) => {
   const ref = useRef();
@@ -191,22 +238,21 @@ function Image() {
 }
 
 
-// const Star = (props) => {
-//   const { nodes, materials } = useGLTF("/mesh.gltf");
-//   return (
-//     <group {...props} dispose={null}>
-//       <mesh
-//         castShadow
-//         receiveShadow
-//         geometry={nodes.pMesh1.geometry}
-//         material={nodes.pMesh1.material}
-//       />
-//     </group>
-//   )
-// }
+const font = new FontLoader().parse(inconsolata);
 
-// useGLTF.preload("/mesh.gltf");
-
+const Text = (props) => {
+  useFrame(({clock}) => (ref.current.uTime = clock.getElapsedTime()));
+  const ref = useRef();
+  return (
+    <mesh
+    position={[-2,0,0]}
+    onClick={props.click}
+    >
+      <textGeometry args={['Start', {font, size: 1, height: 1}]} />
+      <textWaveShaderMaterial uTime={clock.getElapsedTime()} color={"green"} ref={ref} wireframe/>
+    </mesh>
+  )
+}
 
 //UI editor
 class App extends React.Component {
@@ -323,14 +369,17 @@ class App extends React.Component {
     context.stroke();
   }
 
+  
 
   render() {
     if (!this.audioAnalyzer.isConnected()) {
       return (
-        <div className="controls">
-          <button className="btn" onClick={this.toggleMicrophone}>
-            {'start'}
-          </button>
+        <div>
+          <Canvas style={{ height: `100vh`, width: '100vw' }} >
+            <Text click={this.toggleMicrophone}/>
+            <pointLight position={[500, 500, 0]} />
+            <ambientLight intensity={0.4} />
+          </Canvas>
         </div>
       )
     }
