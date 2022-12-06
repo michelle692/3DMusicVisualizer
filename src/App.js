@@ -2,185 +2,25 @@ import React from "react";
 import * as THREE from 'three'
 import { Canvas, extend, useFrame } from '@react-three/fiber'
 import { useRef, Suspense } from 'react';
-import { OrbitControls, Environment, useTexture } from '@react-three/drei'
-import { LayerMaterial, Color, Depth, Fresnel, Noise } from 'lamina'
-import { useControls } from 'leva'
-import './App.css';
+import { Environment, useTexture } from '@react-three/drei'
 import AudioAnalyzer from './AudioAnalyzer';
-import { shaderMaterial } from "@react-three/drei";
-import glsl from "babel-plugin-glsl/macro";
-import { useGLTF } from "@react-three/drei";
-
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 import inconsolata from './Inconsolata_Regular.json'
+import { WaveShaderMaterial } from './shaders/waveshader'
+import { GradientShaderMaterial } from "./shaders/gradient";
+import { DitherShaderMaterial } from "./shaders/dither";
+import { TextWaveShaderMaterial } from "./shaders/textwave";
+import './App.css';
 
 extend({ TextGeometry })
-
-var clock = new THREE.Clock();
-const NUM_OF_BINS = 20;
-
-const WaveShaderMaterial = shaderMaterial(
-  // Uniform
-  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0), uTexture: new THREE.Texture(), }, 
-  // Vertex Shader
-  glsl`
-    precision mediump float;
-
-    varying vec2 vUv;
-
-    uniform float uTime;
-
-    #pragma glslify: snoise3 = require(glsl-noise/simplex/3d); 
-
-    void main() {
-      vUv = uv;
-      
-      vec3 pos = position;
-      float noiseFreq = 1.5;
-      float noiseAmp = 0.25;
-      vec3 noisePos = vec3(pos.x * noiseFreq + uTime, pos.y, pos.z);
-      pos.x += snoise3(noisePos) * noiseAmp;
-
-      gl_Position = projectionMatrix * modelViewMatrix * vec4 (pos, 1.0);
-    }
-  `, 
-  // Fragment shader
-  glsl`
-    precision mediump float;
-
-    uniform vec3 uColor;
-    uniform float uTime;
-    uniform sampler2D uTexture;
-
-    varying vec2 vUv;
-
-    #pragma glslify: dither = require(glsl-dither);
-
-    void main() {
-      vec3 texture = texture2D(uTexture, vUv).rgb;
-      vec4 textCol = vec4(texture, 1.0);
-
-      vec4 color = vec4(sin(uColor.x + uTime), 0.5, 1.0, 0.5);
-
-      gl_FragColor = dither(gl_FragCoord.xy, textCol);
-    }
-  `
-);
-
-const GradientShaderMaterial = shaderMaterial(
-  // Uniform
-  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0) }, 
-  // Vertex Shader
-  glsl`
-    precision mediump float;
-
-    varying vec2 vUv;
-
-    void main() {
-      vUv = uv;
-
-      gl_Position = projectionMatrix * modelViewMatrix * vec4 (position, 1.0);
-    }
-  `, 
-  // Fragment shader
-  glsl`
-    precision mediump float;
-
-    uniform vec3 uColor;
-    uniform float uTime;
-
-    varying vec2 vUv;
-
-    void main() {
-      gl_FragColor = vec4(sin(uTime), 0.5, 1.0, 0.5);
-    }
-  `
-);
-
-const DitherShaderMaterial = shaderMaterial(
-  // Uniform
-  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0), uFreq: 0.0, uBg: 1 },
-  // Vertex Shader
-  glsl`
-    precision mediump float;
-
-    varying vec2 vUv;
-
-    void main() {
-      vUv = uv;
-
-      gl_Position = projectionMatrix * modelViewMatrix * vec4 (position, 1.0);
-    }
-  `,
-
-  // Fragment shader
-  glsl`
-    precision mediump float;
-
-    uniform vec3 uColor;
-    uniform float uTime;
-    uniform float uFreq;
-    uniform int uBg;
-
-    #pragma glslify: dither = require(glsl-dither);
-
-    varying vec2 vUv;
-
-    void main() {
-      vec4 color = vec4(sin(uColor.x + uTime), 0.5, 1.0, 0.5);
-      if (uBg == 0) {
-        color = vec4(uFreq, uFreq, uFreq, 1);
-      }
-      gl_FragColor = dither(gl_FragCoord.xy, color);
-    }
-  `
-);
-
-const TextWaveShaderMaterial = shaderMaterial(
-  // Uniform
-  { uTime: 0, uColor: new THREE.Color(0.0, 0.0, 0.0) }, 
-  // Vertex Shader
-  glsl`
-    precision mediump float;
-
-    varying vec2 vUv;
-
-    uniform float uTime;
-
-    #pragma glslify: snoise3 = require(glsl-noise/simplex/3d);
-
-    void main() {
-      vUv = uv;
-      
-      vec3 pos = position;
-      float noiseFreq = 1.5;
-      float noiseAmp = 0.25;
-      vec3 noisePos = vec3(pos.x * noiseFreq + uTime, pos.y, pos.z);
-      pos.x += snoise3(noisePos) * noiseAmp;
-
-      gl_Position = projectionMatrix * modelViewMatrix * vec4 (pos, 1.0);
-    }
-  `, 
-  // Fragment shader
-  glsl`
-    precision mediump float;
-
-    uniform vec3 uColor;
-    uniform float uTime;
-
-    varying vec2 vUv;
-
-    void main() {
-      gl_FragColor = vec4(sin(vUv.x + uTime), 0.8, 0.7, 0.5);
-    }
-  `
-);
-
 extend({ WaveShaderMaterial });
 extend({ GradientShaderMaterial });
 extend({ DitherShaderMaterial });
 extend({ TextWaveShaderMaterial });
+
+var clock = new THREE.Clock();
+const NUM_OF_BINS = 20;
 
 const BG = (props) => {
   const ref = useRef();
