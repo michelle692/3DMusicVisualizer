@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import * as THREE from 'three'
 import { Canvas, extend, useFrame } from '@react-three/fiber'
 import { useRef, Suspense } from 'react';
@@ -81,13 +81,21 @@ function Image() {
 const font = new FontLoader().parse(inconsolata);
 
 const Text = (props) => {
+  const [hovered, setHovered] = useState(false)
+  useEffect(() => {
+    document.body.style.cursor = hovered ? 'pointer' : 'auto'
+  }, [hovered])
+
   useFrame(({ clock }) => (ref.current.uTime = clock.getElapsedTime()));
   const ref = useRef();
   return (
     <mesh
       position={[-2, 0, 0]}
       onClick={props.click}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
     >
+
       <textGeometry args={['Start', { font, size: 1, height: 1 }]} />
       <textWaveShaderMaterial uTime={clock.getElapsedTime()} color={"green"} ref={ref} wireframe />
     </mesh>
@@ -139,6 +147,7 @@ class App extends React.Component {
   // Gets called when the user clicks the button on the screen. This is
   // not required. As the developer you can have the mic running 24/7.
   toggleMicrophone() {
+    document.body.style.cursor = 'auto';
     if (this.audioAnalyzer.isConnected()) {
       this.stopMicrophone();
     } else {
@@ -215,7 +224,7 @@ class App extends React.Component {
     if (!this.audioAnalyzer.isConnected()) {
       return (
         <div>
-          <Canvas style={{ height: `100vh`, width: '100vw' }} >
+          <Canvas style={{ height: `100vh`, width: '100vw'}} >
             <Text click={this.toggleMicrophone} />
             <pointLight position={[500, 500, 0]} />
             <ambientLight intensity={0.4} />
